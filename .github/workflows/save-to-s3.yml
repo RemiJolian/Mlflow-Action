@@ -1,0 +1,39 @@
+name: Save File to S3 Locally
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  save-file:
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack
+        ports:
+          - 4566:4566
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install boto3
+          pip install localstack
+
+      - name: Create S3 bucket
+        run: |
+          aws --endpoint-url=http://localhost:4566 s3 mb s3://mybucket
+
+      - name: Save file to S3
+        run: |
+          echo "Hello, Localstack!" > hello.txt
+          aws --endpoint-url=http://localhost:4566 s3 cp hello.txt s3://mybucket/hello.txt
